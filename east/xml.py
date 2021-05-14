@@ -21,13 +21,36 @@ import io
 from typing import Dict, List, Tuple
 
 
-class Tree:
+class Element:
+    """
+    Base element class, which contains members common to all elements.
+    All element classes inherit from this.
+    """
+
+    line_start: int
+    col_start: int
+    line_end: int
+    col_end: int
+
+    def __init__(self, line_start: int = 0, col_start: int = 0, line_end: int = 0, col_end: int = 0):
+        self.line_start = line_start
+        self.col_start = col_start
+        self.line_end = line_end
+        self.col_end = col_end
+
+
+class Tree(Element):
     """
     Contains the whole file. The "root" of the tree.
     """
 
+    content: List
 
-class Tag:
+    def __init__(self, content: List = []):
+        self.content = content
+
+
+class Tag(Element):
     """
     Contains information for one tag.
     """
@@ -49,9 +72,10 @@ def loads(data: str, special: Dict):
     return load(io.StringIO(data), special)
 
 
-def dump(tree: Tree, stream: io.StringIO, special: Dict):
+def dump(tree: Tree, stream: io.StringIO, special: Dict, indent: int = 4):
     pass
 
-def dumps(tree: Tree, special: Dict):
+def dumps(tree: Tree, special: Dict, indent: int = 4):
     stream = io.StringIO()
-    result = dump(tree, stream, special)
+    result = dump(tree, stream, special, indent)
+    return result
