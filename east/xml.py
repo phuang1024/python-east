@@ -17,7 +17,14 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from typing import List, Tuple
+import io
+from typing import Dict, List, Tuple
+
+
+class Tree:
+    """
+    Contains the whole file. The "root" of the tree.
+    """
 
 
 class Tag:
@@ -33,3 +40,18 @@ class Tag:
         self.name = name
         self.args = args
         self.content = content
+
+
+def load(stream: io.StringIO, special: Dict):
+    pass
+
+def loads(data: str, special: Dict):
+    return load(io.StringIO(data), special)
+
+
+def dump(tree: Tree, stream: io.StringIO, special: Dict):
+    pass
+
+def dumps(tree: Tree, special: Dict):
+    stream = io.StringIO()
+    result = dump(tree, stream, special)
