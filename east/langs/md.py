@@ -33,6 +33,9 @@ class Tree(Element):
     def __init__(self, content: List = []):
         self.content = content
 
+    def __repr__(self) -> str:
+        return f"<MarkdownTree({len(self.content)} elements)>"
+
 
 class Header(Element):
     """
@@ -45,6 +48,9 @@ class Header(Element):
     def __init__(self, size: int = 1, text: str = "") -> None:
         self.size = size
         self.text = text
+
+    def __repr__(self) -> str:
+        return f"<MarkdownHeader(size={self.size}, text={self.text})>"
 
     @staticmethod
     def is_header(line: str) -> bool:
@@ -123,6 +129,9 @@ def parse(data: str, special: Dict) -> Tree:
     i = 0
     while len(lines) > 0:
         line = lines.pop(0)
+        i += 1
+        if len(line.strip()) == 0:
+            continue
 
         if Header.is_header(line):
             size = Header.header_size(line)
@@ -133,8 +142,6 @@ def parse(data: str, special: Dict) -> Tree:
             element.col_start = 0
             element.col_end = len(line) - 1
             tree.content.append(element)
-
-        i += 1
 
     return tree
 
