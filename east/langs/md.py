@@ -42,12 +42,16 @@ class Header(Element):
     size: int
     text: str
 
-    def __init__(self, size: int = 1, text: str = ""):
+    def __init__(self, size: int = 1, text: str = "") -> None:
         self.size = size
         self.text = text
 
     @staticmethod
-    def is_header(line: str):
+    def is_header(line: str) -> bool:
+        """
+        Returns whether a line is a header.
+        :param line: Line to parse
+        """
         if len(line) == 0:
             return False
 
@@ -75,12 +79,12 @@ class Header(Element):
         return True
 
     @staticmethod
-    def header_size(line: str):
+    def header_size(line: str) -> int:
         """
+        Gets the size (i.e. number of "#") of a header
         Assumes the line is already a header.
-        You can check with Header.is_header(line)
+        :param line: Line to parse.
         """
-
         count = 0
         for char in line:
             if char == "#":
@@ -91,7 +95,12 @@ class Header(Element):
         return count
 
     @staticmethod
-    def header_text(line: str):
+    def header_text(line: str) -> str:
+        """
+        Gets text from a header.
+        Assumes the line is already a header.
+        :param line: Line to parse
+        """
         count = 0
         for i, char in enumerate(line):
             if char == "#":
@@ -102,7 +111,12 @@ class Header(Element):
         return line[i:].strip()
 
 
-def parse(data: str, special: Dict):
+def parse(data: str, special: Dict) -> Tree:
+    """
+    Parses data into a tree.
+    :param data: String data to parse.
+    :param special: Special parameters for current data.
+    """
     tree = Tree()
 
     lines = data.split("\n")
@@ -125,8 +139,18 @@ def parse(data: str, special: Dict):
     return tree
 
 
-def load(stream: io.StringIO, special: Dict = {}):
+def load(stream: io.StringIO, special: Dict = {}) -> Tree:
+    """
+    Parses stream into a tree.
+    :param stream: Stream with target data (i.e. a file)
+    :param special: Special parameters for current data.
+    """
     return loads(stream.read(), special)
 
-def loads(data: str, special: Dict = {}):
+def loads(data: str, special: Dict = {}) -> Tree:
+    """
+    Loads data into a tree.
+    :param data: String data to load.
+    :param special: Special parameters for current data.
+    """
     return parse(data, special)
