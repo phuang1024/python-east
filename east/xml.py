@@ -18,6 +18,7 @@
 #
 
 import io
+import string
 from typing import Dict, List, Tuple
 
 
@@ -65,12 +66,21 @@ class Tag(Element):
         self.content = content
 
 
+def parse_content(stream: io.StringIO, special: Dict):
+    """
+    Parses a stream into a tree.
+    """
+
+    tree = Tree()
+
+    return tree
+
+
 def load(stream: io.StringIO, special: Dict):
-    pass
+    return parse_content(stream, special)
 
 def loads(data: str, special: Dict):
     return load(io.StringIO(data), special)
-
 
 def dump(tree: Tree, stream: io.StringIO, special: Dict, indent: int = 4):
     pass
