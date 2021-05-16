@@ -117,6 +117,34 @@ class Header(Element):
         return line[i:].strip()
 
 
+class TextBlock(Element):
+    """
+    A block of text, containing elements which differ in formatting.
+    """
+
+    content: List
+
+    def __init__(self, content: List = []) -> None:
+        self.content = content
+
+
+class Text(Element):
+    """
+    A single section of text with the same formatting.
+    """
+
+    text: str
+    bold: bool
+    italic: bool
+    code: bool
+
+    def __init__(self, text: str = "", bold: bool = False, italic: bool = False, code: bool = False):
+        self.text = text
+        self.bold = bold
+        self.italic = italic
+        self.code = code
+
+
 def parse(data: str, special: Dict) -> Tree:
     """
     Parses data into a tree.
