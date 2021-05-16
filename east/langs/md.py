@@ -25,7 +25,7 @@ from ..common import Element
 
 class Tree(Element):
     """
-    Tree representation of one markdown file.
+    Tree representation of one Markdown file.
     """
 
     content: List
@@ -34,8 +34,52 @@ class Tree(Element):
         self.content = content
 
 
+class Header(Element):
+    """
+    Contains a header in Markdown (line that starts with "#")
+    """
+
+    size: int
+    text: str
+
+    def __init__(self, size: int = 1, text: str = ""):
+        self.size = size
+        self.text = text
+
+    @staticmethod
+    def is_header(line: str):
+        if len(line) == 0:
+            return False
+
+        hashtag_cnt = 0
+        for char in line:
+            if char == "#":
+                # Increment count and check bounds
+                hashtag_cnt += 1
+                if hashtag_cnt >= 7:
+                    return False
+
+            elif hashtag_cnt > 0 and char == " ":
+                # Reached the end of hashtags
+                return True
+
+            elif hashtag_cnt > 0 and char != " ":
+                # Non space right after hashtags
+                return False
+
+            elif hashtag_cnt == 0 and char != " ":
+                # A non space character before hashtags
+                return False
+
+        # True if line only contains hashtags
+        return True
+
+
 def parse(data: io.StringIO, special: Dict):
     tree = Tree()
+
+    for i, line in enumerate(data.split("\n")):
+        pass
 
     return tree
 
