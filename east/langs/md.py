@@ -74,18 +74,59 @@ class Header(Element):
         # True if line only contains hashtags
         return True
 
+    @staticmethod
+    def header_size(line: str):
+        """
+        Assumes the line is already a header.
+        You can check with Header.is_header(line)
+        """
 
-def parse(data: io.StringIO, special: Dict):
+        count = 0
+        for char in line:
+            if char == "#":
+                count += 1
+            elif char != "#" and count > 0:
+                break
+
+        return count
+
+    @staticmethod
+    def header_text(line: str):
+        count = 0
+        for i, char in enumerate(line):
+            if char == "#":
+                count += 1
+            elif char != "#" and count > 0:
+                break
+
+        return line[i:].strip()
+
+
+def parse(data: str, special: Dict):
     tree = Tree()
 
-    for i, line in enumerate(data.split("\n")):
-        pass
+    lines = data.split("\n")
+    i = 0
+    while len(lines) > 0:
+        line = lines.pop(0)
+
+        if Header.is_header(line):
+            size = Header.header_size(line)
+            text = Header.header_text(line)
+            element = Header(size, text)
+            element.line_start = i
+            element.line_end = i
+            element.col_start = 0
+            element.col_end = len(line) - 1
+            tree.content.append(element)
+
+        i += 1
 
     return tree
 
 
-def load(stream: io.StringIO, special: Dict):
+def load(stream: io.StringIO, special: Dict = {}):
     return loads(stream.read(), special)
 
-def loads(data: str, special: Dict):
+def loads(data: str, special: Dict = {}):
     return parse(data, special)
