@@ -17,4 +17,31 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from . import md
+import io
+import string
+from typing import List, Dict
+from ..common import Element
+
+
+class Tree(Element):
+    """
+    Tree representation of one markdown file.
+    """
+
+    content: List
+
+    def __init__(self, content: List = []):
+        self.content = content
+
+
+def parse(data: io.StringIO, special: Dict):
+    tree = Tree()
+
+    return tree
+
+
+def load(stream: io.StringIO, special: Dict):
+    return loads(stream.read(), special)
+
+def loads(data: str, special: Dict):
+    return parse(data, special)
