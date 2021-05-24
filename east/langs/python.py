@@ -50,7 +50,7 @@ class Comment(Element):
         self.text = text
 
     def __repr__(self) -> str:
-        return f"<PythonHeader(size={self.size}, text={self.text})>"
+        return f"<PythonComment(size={self.size}, text={self.text})>"
 
     @staticmethod
     def is_comment(line: str) -> bool:
@@ -70,7 +70,39 @@ class Comment(Element):
             else:
                 return False
         
+class String(Element):
+    """
+    Contains a string in Python (starts and ends with " or ')
+    """
 
+    size: int
+    text: str
+
+    def __init__(self, size: int = 1, text: str = "") -> None:
+        self.size = size
+        self.text = text
+
+    def __repr__(self) -> str:
+        return f"<PythonString(size={self.size}, text={self.text})>"
+
+    @staticmethod
+    def is_string(line: str) -> bool:
+        """
+        Returns whether a line is a string.
+        :param line: Line to parse
+        """
+        if len(line) == 0:
+            return False
+         
+        indx = 0
+
+        for char in line:
+            if (char == "'" or char == '"') and (indx == 0 or indx == (len(line)-1)):
+                return True
+            else:
+                return False
+        
+        
 def parse(data: str, special: Dict) -> Tree:
     """
     Parses data into a tree.
@@ -86,7 +118,12 @@ def parse(data: str, special: Dict) -> Tree:
         i += 1
         if len(line.strip()) == 0:
             continue
-
+        if String.is_string(line):
+            element.line_start = i
+            element.line_end = i
+            element.col_start = 0
+            element.col_end = len(line) - 1
+            tree.content.append(element)
         if Comment.is_comment(line):
             element.line_start = i
             element.line_end = i
