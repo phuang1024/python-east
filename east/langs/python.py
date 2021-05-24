@@ -119,12 +119,18 @@ def parse(data: str, special: Dict) -> Tree:
         if len(line.strip()) == 0:
             continue
         if String.is_string(line):
+            size = String.header_size(line)
+            text = String.header_text(line)
+            element = String(size, text)
             element.line_start = i
             element.line_end = i
             element.col_start = 0
             element.col_end = len(line) - 1
             tree.content.append(element)
         if Comment.is_comment(line):
+            size = Comment.header_size(line)
+            text = Comment.header_text(line)
+            element = Comment(size, text)
             element.line_start = i
             element.line_end = i
             element.col_start = 0
