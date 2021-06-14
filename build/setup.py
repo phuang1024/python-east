@@ -1,6 +1,6 @@
 #
-#  Python EAST
-#  Python module for parsing many languages into ASTs.
+#  AADraw
+#  Antialiased graphics drawing library for Python.
 #  Copyright Patrick Huang 2021
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -17,14 +17,30 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+import os
+import shutil
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+PARENT = os.path.dirname(os.path.realpath(__file__))
+DEST = os.path.join(PARENT, "aadraw")
+SRC = os.path.join(os.path.dirname(PARENT), "src")
+
+with open(os.path.join(os.path.dirname(PARENT), "README.md"), "r") as file:
+    long_description = file.read()
+
+with open(os.path.join(os.path.dirname(PARENT), "requirements.txt"), "r") as file:
+    requirements = file.read().strip().split("\n")
+
+if os.path.isdir(DEST):
+    if input(f"Destination {DEST} exists. Remove permanently? (y/N) ").lower().strip() == "y":
+        shutil.rmtree(DEST)
+    else:
+        exit()
+shutil.copytree(SRC, DEST)
 
 setuptools.setup(
     name="python-east",
-    version="0.0.1",
+    version=os.path.basename(os.environ["PYPI_VERSION"]),
     author="Patrick Huang",
     author_email="huangpatrick16777216@gmail.com",
     description="Python module for parsing many languages into ASTs.",
@@ -33,11 +49,12 @@ setuptools.setup(
     url="https://github.com/HuangPatrick16777216/python-east",
     py_modules=["east"],
     packages=setuptools.find_packages(),
-    install_requires=[
-    ],
+    install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
     ],
 )
+
+shutil.rmtree(DEST)
