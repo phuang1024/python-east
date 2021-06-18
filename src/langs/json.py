@@ -19,7 +19,7 @@
 
 import os
 import string
-from typing import IO
+from typing import Any, IO, List
 
 SPECIAL = "{}[]\":,"
 
@@ -88,10 +88,44 @@ class String:
         return inst
 
 
-class List:
+class Array:
     """
-    A list element.
+    An array element.
     """
+    elements: List[Any]
+    padding_after: str
+
+    def __init__(self):
+        self.elements = []
+        self.padding_after = ""
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch != "[":
+            raise ValueError(f"Array starts with {ch}, expected [")
+
+        while True:
+            while (ch := stream.read(1).decode()) not in SPECIAL:
+                continue
+            stream.seek(-1, os.SEEK_CUR)
+
+            if ch == "]":
+                break
+            elif ch == ",":
+                inst.elements.append(Comma.from_stream(stream))
+            elif ch == "[":
+                inst.elements.append(Array.from_stream(stream))
+            elif ch == "\"":
+                inst.elements.append(String.from_stream(stream))
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        stream.seek(-1, os.SEEK_CUR)
+
+        return inst
 
 
 class Tree:
