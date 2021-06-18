@@ -24,20 +24,37 @@ from typing import Any, IO, List
 SPECIAL = "{}[]\":,"
 
 
-class Comma:
+class Element:
+    """
+    Base JSON element.
+    All other elements extend off of this.
+    """
+    padding_after: str
+
+    def __init__(self) -> None:
+        ...
+
+    def __str__(self) -> str:
+        ...
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        ...
+
+
+class Comma(Element):
     """
     A comma element.
     """
-    padding_after: str
 
     def __init__(self) -> None:
         self.padding_after = ""
 
     def __str__(self) -> str:
         return f"json.Comma(padding={repr(self.padding_after)})"
-
-    def __repr__(self) -> str:
-        return self.__str__()
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
@@ -54,12 +71,11 @@ class Comma:
         return inst
 
 
-class String:
+class String(Element):
     """
     A string element.
     """
     string: str
-    padding_after: str
 
     def __init__(self) -> None:
         self.string = ""
@@ -67,9 +83,6 @@ class String:
 
     def __str__(self) -> str:
         return f"json.String(string={repr(self.string)}, padding={repr(self.padding_after)})"
-
-    def __repr__(self) -> str:
-        return self.__str__()
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
@@ -88,16 +101,18 @@ class String:
         return inst
 
 
-class Array:
+class Array(Element):
     """
     An array element.
     """
     elements: List[Any]
-    padding_after: str
 
     def __init__(self):
         self.elements = []
         self.padding_after = ""
+
+    def __str__(self) -> str:
+        return f"json.Array(elements={self.elements})"
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
@@ -135,4 +150,8 @@ class Tree:
     padding_before: str
 
     def __init__(self) -> None:
-        pass
+        self.padding_before = ""
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        ...
