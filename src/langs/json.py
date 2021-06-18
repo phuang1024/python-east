@@ -21,7 +21,37 @@ import os
 import string
 from typing import IO
 
-SPECIAL = "{}[]\":"
+SPECIAL = "{}[]\":,"
+
+
+class Comma:
+    """
+    A comma element.
+    """
+    padding_after: str
+
+    def __init__(self) -> None:
+        self.padding_after = ""
+
+    def __str__(self) -> str:
+        return f"json.Comma(padding={repr(self.padding_after)})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch != ",":
+            raise ValueError(f"Comma \",\" not found at the start of stream.")
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        stream.seek(-1, os.SEEK_CUR)
+
+        return inst
 
 
 class String:
@@ -36,7 +66,7 @@ class String:
         self.padding_after = ""
 
     def __str__(self) -> str:
-        return f"json.String({repr(self.string)}, {repr(self.padding_after)})"
+        return f"json.String(string={repr(self.string)}, padding={repr(self.padding_after)})"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -56,6 +86,12 @@ class String:
         stream.seek(-1, os.SEEK_CUR)
 
         return inst
+
+
+class List:
+    """
+    A list element.
+    """
 
 
 class Tree:
