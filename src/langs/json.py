@@ -179,6 +179,38 @@ class Number(Element):
         return inst
 
 
+class String(Element):
+    """
+    A string element.
+    """
+    value: str
+
+    def __str__(self) -> str:
+        return f"json.String({repr(self.value)})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch != "\"":
+            raise ValueError(f"\" not found at the start of stream.")
+
+        data = ""
+        while (ch := stream.read(1).decode()) != "\"":
+            if len(ch) == 0:
+                break
+            data += ch
+        inst.value = data
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
 class Tree:
     """
     A whole JSON syntax tree.
