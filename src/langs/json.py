@@ -58,8 +58,7 @@ class Comma(Element):
         inst = cls()
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
-        if ch != ",":
-            raise ValueError(f"Comma \",\" not found at the start of stream.")
+        assert (ch == ","), f"Comma \",\" not found at the start of stream."
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
             inst.padding_after += ch
@@ -82,8 +81,7 @@ class Colon(Element):
         inst = cls()
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
-        if ch != ":":
-            raise ValueError(f"Colon \":\" not found at the start of stream.")
+        assert (ch == ":"), f"Colon \":\" not found at the start of stream."
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
             inst.padding_after += ch
@@ -106,8 +104,7 @@ class Null(Element):
         inst = cls()
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
-        if ch != "n":
-            raise ValueError(f"null not found at the start of stream.")
+        assert (ch == "n"), f"null not found at the start of stream."
         stream.read(3)   # read "ull" in "null"
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
@@ -124,6 +121,10 @@ class Bool(Element):
     """
     value: bool
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.value = False
+
     def __str__(self) -> str:
         return f"json.Bool({self.value})"
 
@@ -132,8 +133,7 @@ class Bool(Element):
         inst = cls()
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
-        if ch not in "tf":
-            raise ValueError(f"\"t\" or \"f\" not found at the start of stream.")
+        assert (ch in "tf"), f"\"t\" or \"f\" not found at the start of stream."
         inst.value = (ch == "t")
         stream.read((3 if inst.value else 4))   # read remaining chars
 
@@ -151,6 +151,10 @@ class Number(Element):
     """
     value: Union[int, float]
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.value = 0
+
     def __str__(self) -> str:
         return f"json.Number({self.value})"
 
@@ -159,8 +163,7 @@ class Number(Element):
         inst = cls()
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
-        if ch not in string.digits+".":
-            raise ValueError(f"Digit not found at the start of stream.")
+        assert (ch in string.digits+"."), f"Digit not found at the start of stream."
 
         data = ch
         while (ch := stream.read(1).decode()) in string.digits+".":
@@ -185,6 +188,10 @@ class String(Element):
     """
     value: str
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.value = ""
+
     def __str__(self) -> str:
         return f"json.String({repr(self.value)})"
 
@@ -193,15 +200,48 @@ class String(Element):
         inst = cls()
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
-        if ch != "\"":
-            raise ValueError(f"\" not found at the start of stream.")
+        assert (ch == "\""), f"\" not found at the start of stream."
 
-        data = ""
         while (ch := stream.read(1).decode()) != "\"":
             if len(ch) == 0:
                 break
-            data += ch
-        inst.value = data
+            inst.value += ch
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
+class Array(Element):
+    """
+    An array element.
+    """
+    elements: List[Element]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.elements = []
+
+    def __str__(self) -> str:
+        return f"json.Array({self.elements})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        assert (ch == "["), f"[ not found at the start of stream."
+
+        while True:
+            while (ch := stream.read(1).decode()) not in SPECIAL:
+                assert (len(ch) > 0), "Unexpected EOF while parsing json.Array"
+            if ch == "]":
+                break
+            stream.seek(-1, os.SEEK_CUR)
+            inst.elements.append(read_element(stream))
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
             inst.padding_after += ch
@@ -240,6 +280,8 @@ def read_element(stream: IO[bytes]) -> Element:
         return Comma.from_stream(stream)
     elif ch == ":":
         return Colon.from_stream(stream)
+    elif ch == "\"":
+        return String.from_stream(stream)
     elif ch == "[":
         return Array.from_stream(stream)
     elif ch == "{":
