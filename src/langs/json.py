@@ -18,8 +18,9 @@
 #
 
 import os
+import io
 import string
-from typing import Any, IO, List, Tuple, Union
+from typing import IO, List, Union
 
 SPECIAL = "ntf:,\"[]{}." + string.digits
 
@@ -326,13 +327,20 @@ class Tree:
     A whole JSON syntax tree.
     """
     padding_before: str
+    element: Element
 
     def __init__(self) -> None:
         self.padding_before = ""
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
-        pass
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            inst.padding_before += ch
+        stream.seek(-1, os.SEEK_CUR)
+
+        inst.element = read_element(stream)
+        return inst
 
 
 def read_element(stream: IO[bytes]) -> Element:
@@ -358,3 +366,11 @@ def read_element(stream: IO[bytes]) -> Element:
         return Dictionary.from_stream(stream)
 
     raise ValueError(f"Unknown start character: {ch}")
+
+
+def load(stream: IO[bytes]) -> Tree:
+    return Tree.from_stream(stream)
+
+
+def loads(string: bytes) -> Tree:
+    return Tree.from_stream(io.BytesIO(string))
