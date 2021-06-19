@@ -1,6 +1,6 @@
 #
-#  AADraw
-#  Antialiased graphics drawing library for Python.
+#  Python EAST
+#  Python module for parsing many languages into ASTs.
 #  Copyright Patrick Huang 2021
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ import shutil
 import setuptools
 
 PARENT = os.path.dirname(os.path.realpath(__file__))
-DEST = os.path.join(PARENT, "aadraw")
+DEST = os.path.join(PARENT, "east")
 SRC = os.path.join(os.path.dirname(PARENT), "src")
 
 with open(os.path.join(os.path.dirname(PARENT), "README.md"), "r") as file:
