@@ -19,7 +19,7 @@
 
 import os
 import string
-from typing import Any, IO, List
+from typing import Any, IO, List, Tuple, Union
 
 SPECIAL = "{}[]\":,"
 
@@ -54,7 +54,7 @@ class Comma(Element):
         self.padding_after = ""
 
     def __str__(self) -> str:
-        return f"json.Comma(padding={repr(self.padding_after)})"
+        return f"json.Comma()"
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
@@ -66,7 +66,35 @@ class Comma(Element):
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
             inst.padding_after += ch
-        stream.seek(-1, os.SEEK_CUR)
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
+class Colon(Element):
+    """
+    A colon element.
+    """
+
+    def __init__(self) -> None:
+        self.padding_after = ""
+
+    def __str__(self) -> str:
+        return f"json.Colon()"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch != ":":
+            raise ValueError(f"Colon \":\" not found at the start of stream.")
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
 
         return inst
 
@@ -82,7 +110,7 @@ class String(Element):
         self.padding_after = ""
 
     def __str__(self) -> str:
-        return f"json.String(string={repr(self.string)}, padding={repr(self.padding_after)})"
+        return f"json.String(string={repr(self.string)})"
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
@@ -94,9 +122,12 @@ class String(Element):
 
         while (ch := stream.read(1).decode()) != "\"":
             inst.string += ch
-        while (ch := stream.read(1).decode()) not in SPECIAL:
+
+        found_end = False
+        while (ch := stream.read(1).decode()) not in SPECIAL and found_end:
             inst.padding_after += ch
-        stream.seek(-1, os.SEEK_CUR)
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
 
         return inst
 
@@ -105,7 +136,7 @@ class Array(Element):
     """
     An array element.
     """
-    elements: List[Any]
+    elements: List[Element]
 
     def __init__(self):
         self.elements = []
@@ -135,10 +166,69 @@ class Array(Element):
                 inst.elements.append(Array.from_stream(stream))
             elif ch == "\"":
                 inst.elements.append(String.from_stream(stream))
+            elif ch == "{":
+                inst.elements.append(Dictionary.from_stream(stream))
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
             inst.padding_after += ch
-        stream.seek(-1, os.SEEK_CUR)
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
+class Dictionary(Element):
+    """
+    A dictionary element.
+    """
+    elements: List[Union[Tuple[String, Colon, Element], Comma]]
+
+    def __init__(self):
+        self.elements = []
+        self.padding_after = ""
+
+    def __str__(self) -> str:
+        return f"json.Dictionary(elements={self.elements})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch != "{":
+            raise ValueError(f"Dictionary starts with {ch}, expected {{")
+
+        status = 0    # 0 = searching for key, 1 = searching for colon, 2 = searching for value
+        while True:
+            while (ch := stream.read(1).decode()) not in SPECIAL:
+                continue
+            stream.seek(-1, os.SEEK_CUR)
+
+            if ch == "}":
+                break
+            elif ch == ",":
+                inst.elements.append(Comma.from_stream(stream))
+
+            if status == 0 and ch == "\"":
+                key = String.from_stream(stream)
+                status = 1
+            elif status == 1 and ch == ":":
+                colon = Colon.from_stream(stream)
+                status = 2
+            elif status == 2 and ch in SPECIAL:
+                if ch == "[":
+                    element = Array.from_stream(stream)
+                elif ch == "\"":
+                    element = String.from_stream(stream)
+                elif ch == "{":
+                    element = Dictionary.from_stream(stream)
+                inst.elements.append((key, colon, element))
+                status = 0
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
 
         return inst
 
