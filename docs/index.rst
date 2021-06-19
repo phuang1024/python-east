@@ -1,20 +1,15 @@
-.. Python EAST documentation master file, created by
-   sphinx-quickstart on Sat Jun 19 10:14:11 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Python EAST
+===========
 
-Welcome to Python EAST's documentation!
-=======================================
+A language parser library for Python.
+
+East stands for Extensive Abstract Syntax Trees.
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
+   install
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   json
