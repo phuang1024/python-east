@@ -251,6 +251,76 @@ class Array(Element):
         return inst
 
 
+class DictPair(Element):
+    """
+    A dictionary (key, value) pair.
+    """
+    key: String
+    colon: Colon
+    value: Element
+
+    def __str__(self) -> str:
+        return f"json.DictPair({self.key}, {self.value})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        assert (ch == "\""), f"\" not found at the start of stream."
+        stream.seek(-1, os.SEEK_CUR)
+
+        inst.key = read_element(stream)
+        inst.colon = read_element(stream)
+        inst.value = read_element(stream)
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
+class Dictionary(Element):
+    """
+    A dictionary element.
+    """
+    elements: List[Union[DictPair, Comma]]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.elements = []
+
+    def __str__(self) -> str:
+        return f"json.Dictionary({self.elements})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        assert (ch == "{"), "{ not found at the start of stream."
+
+        while True:
+            while (ch := stream.read(1).decode()) not in SPECIAL:
+                assert (len(ch) > 0), "Unexpected EOF while parsing json.Dictionary"
+            if ch == "}":
+                break
+            stream.seek(-1, os.SEEK_CUR)
+            if ch == ",":
+                inst.elements.append(read_element(stream))
+            else:
+                inst.elements.append(DictPair.from_stream(stream))
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
 class Tree:
     """
     A whole JSON syntax tree.
