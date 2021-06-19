@@ -145,6 +145,40 @@ class Bool(Element):
         return inst
 
 
+class Number(Element):
+    """
+    A number element.
+    """
+    value: Union[int, float]
+
+    def __str__(self) -> str:
+        return f"json.Number({self.value})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch not in string.digits+".":
+            raise ValueError(f"Digit not found at the start of stream.")
+
+        data = ch
+        while (ch := stream.read(1).decode()) in string.digits+".":
+            if len(ch) == 0:
+                break
+            data += ch
+        inst.value = (float(data) if "." in data else int(data))
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
 class Tree:
     """
     A whole JSON syntax tree.
