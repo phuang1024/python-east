@@ -221,10 +221,12 @@ class Array(Element):
     An array element.
     """
     elements: List[Element]
+    padding_after_start: str
 
     def __init__(self) -> None:
         super().__init__()
         self.elements = []
+        self.padding_after_start = ""
 
     def __str__(self) -> str:
         return f"json.Array({self.elements})"
@@ -235,6 +237,11 @@ class Array(Element):
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
         assert (ch == "["), f"[ not found at the start of stream."
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after_start += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
 
         while True:
             while (ch := stream.read(1).decode()) not in SPECIAL:
@@ -288,10 +295,12 @@ class Dictionary(Element):
     A dictionary element.
     """
     elements: List[Union[DictPair, Comma]]
+    padding_after_start: str
 
     def __init__(self) -> None:
         super().__init__()
         self.elements = []
+        self.padding_after_start = ""
 
     def __str__(self) -> str:
         return f"json.Dictionary({self.elements})"
@@ -302,6 +311,11 @@ class Dictionary(Element):
         while (ch := stream.read(1).decode()) in string.whitespace:
             continue
         assert (ch == "{"), "{ not found at the start of stream."
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after_start += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
 
         while True:
             while (ch := stream.read(1).decode()) not in SPECIAL:
