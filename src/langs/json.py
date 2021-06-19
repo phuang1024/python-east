@@ -21,7 +21,7 @@ import os
 import string
 from typing import Any, IO, List, Tuple, Union
 
-SPECIAL = "{}[]\":,"
+SPECIAL = "ntf:,\"[]{}." + string.digits
 
 
 class Element:
@@ -222,4 +222,27 @@ class Tree:
 
     @classmethod
     def from_stream(cls, stream: IO[bytes]):
-        ...
+        pass
+
+
+def read_element(stream: IO[bytes]) -> Element:
+    while (ch := stream.read(1).decode()) in string.whitespace:
+        continue
+    stream.seek(-1, os.SEEK_CUR)
+
+    if ch == "n":
+        return Null.from_stream(stream)
+    elif ch in "tf":
+        return Bool.from_stream(stream)
+    elif ch in string.digits+".":
+        return Number.from_stream(stream)
+    elif ch == ",":
+        return Comma.from_stream(stream)
+    elif ch == ":":
+        return Colon.from_stream(stream)
+    elif ch == "[":
+        return Array.from_stream(stream)
+    elif ch == "{":
+        return Dictionary.from_stream(stream)
+
+    raise ValueError(f"Unknown start character: {ch}")
