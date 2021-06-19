@@ -17,20 +17,4 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-
-class Element:
-    """
-    Base element class, which contains members common to all elements.
-    All element classes inherit from this.
-    """
-
-    line_start: int
-    col_start: int
-    line_end: int
-    col_end: int
-
-    def __init__(self, line_start: int = 0, col_start: int = 0, line_end: int = 0, col_end: int = 0):
-        self.line_start = line_start
-        self.col_start = col_start
-        self.line_end = line_end
-        self.col_end = col_end
+from . import json
