@@ -32,7 +32,7 @@ class Element:
     padding_after: str
 
     def __init__(self) -> None:
-        ...
+        self.padding_after = ""
 
     def __str__(self) -> str:
         ...
@@ -49,9 +49,6 @@ class Comma(Element):
     """
     A comma element.
     """
-
-    def __init__(self) -> None:
-        self.padding_after = ""
 
     def __str__(self) -> str:
         return f"json.Comma()"
@@ -77,9 +74,6 @@ class Colon(Element):
     A colon element.
     """
 
-    def __init__(self) -> None:
-        self.padding_after = ""
-
     def __str__(self) -> str:
         return f"json.Colon()"
 
@@ -90,6 +84,58 @@ class Colon(Element):
             continue
         if ch != ":":
             raise ValueError(f"Colon \":\" not found at the start of stream.")
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
+class Null(Element):
+    """
+    A null (None) element.
+    """
+
+    def __str__(self) -> str:
+        return f"json.Null()"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch != "n":
+            raise ValueError(f"null not found at the start of stream.")
+        stream.read(3)   # read "ull" in "null"
+
+        while (ch := stream.read(1).decode()) not in SPECIAL:
+            inst.padding_after += ch
+        if len(ch) > 0:
+            stream.seek(-1, os.SEEK_CUR)
+
+        return inst
+
+
+class Bool(Element):
+    """
+    A boolean element.
+    """
+    value: bool
+
+    def __str__(self) -> str:
+        return f"json.Bool({self.value})"
+
+    @classmethod
+    def from_stream(cls, stream: IO[bytes]):
+        inst = cls()
+        while (ch := stream.read(1).decode()) in string.whitespace:
+            continue
+        if ch not in "tf":
+            raise ValueError(f"\"t\" or \"f\" not found at the start of stream.")
+        inst.value = (ch == "t")
+        stream.read((3 if inst.value else 4))   # read remaining chars
 
         while (ch := stream.read(1).decode()) not in SPECIAL:
             inst.padding_after += ch
