@@ -1,4 +1,8 @@
 __pycache__
 .vscode
 
+/docs/_build
+/docs/_static
+/docs/_templates
+
 /test.*
